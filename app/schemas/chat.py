@@ -8,9 +8,10 @@
     - StreamEventType: 이벤트 타입 (thinking, tool, token, done)
 """
 
+from datetime import UTC, datetime
+from typing import Any, Literal
+
 from pydantic import BaseModel, Field
-from typing import Optional, Literal, Any
-from datetime import datetime, timezone
 
 
 class ChatRequest(BaseModel):
@@ -47,7 +48,7 @@ class ChatRequest(BaseModel):
         examples=["user123", "session-abc-123"],
     )
 
-    user_id: Optional[str] = Field(
+    user_id: str | None = Field(
         default=None,
         max_length=100,
         description="사용자 식별자 (선택)",
@@ -78,7 +79,7 @@ class ChatResponse(BaseModel):
         description="루미의 응답 메시지",
     )
 
-    tool_used: Optional[str] = Field(
+    tool_used: str | None = Field(
         default=None,
         description="사용된 Tool 이름",
         examples=["get_schedule", "recommend_song", None],
@@ -90,7 +91,7 @@ class ChatResponse(BaseModel):
     )
 
     timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         description="응답 생성 시간 (UTC)",
     )
 
@@ -105,46 +106,46 @@ StreamEventType = Literal["thinking", "tool", "token", "response", "error", "don
 
 class StreamEvent(BaseModel):
     """
-SSE 스트리밍 이벤트 스키마
+    SSE 스트리밍 이벤트 스키마
 
-    Server-Sent Events로 전송되는 이벤트 형식입니다.
-    각 이벤트 타입에 따라 다른 필드가 채워집니다.
+        Server-Sent Events로 전송되는 이벤트 형식입니다.
+        각 이벤트 타입에 따라 다른 필드가 채워집니다.
 
-    Attributes:
-        type: 이벤트 타입
-            - thinking: 노드 실행 시작 (어떤 노드가 실행 중인지)
-            - tool: Tool 실행 결과
-            - token: LLM 토큰 스트리밍
-            - response: 최종 응답 완료
-            - error: 에러 발생
-            - done: 스트리밍 종료
-        node: 현재 실행 중인 노드 이름 (thinking, tool 이벤트)
-        content: 텍스트 내용 (token, response 이벤트)
-        tool_name: 실행된 Tool 이름 (tool 이벤트)
-        tool_result: Tool 실행 결과 (tool 이벤트)
-        error: 에러 메시지 (error 이벤트)
+        Attributes:
+            type: 이벤트 타입
+                - thinking: 노드 실행 시작 (어떤 노드가 실행 중인지)
+                - tool: Tool 실행 결과
+                - token: LLM 토큰 스트리밍
+                - response: 최종 응답 완료
+                - error: 에러 발생
+                - done: 스트리밍 종료
+            node: 현재 실행 중인 노드 이름 (thinking, tool 이벤트)
+            content: 텍스트 내용 (token, response 이벤트)
+            tool_name: 실행된 Tool 이름 (tool 이벤트)
+            tool_result: Tool 실행 결과 (tool 이벤트)
+            error: 에러 메시지 (error 이벤트)
 
-    Example:
-        >>> # 노드 실행 시작 이벤트
-        >>> event = StreamEvent(type="thinking", node="router")
+        Example:
+            >>> # 노드 실행 시작 이벤트
+            >>> event = StreamEvent(type="thinking", node="router")
 
-        >>> # Tool 실행 결과 이벤트
-        >>> event = StreamEvent(
-        ...     type="tool",
-        ...     node="tool",
-        ...     tool_name="get_schedule",
-        ...     tool_result={"schedules": [...]}
-        ... )
+            >>> # Tool 실행 결과 이벤트
+            >>> event = StreamEvent(
+            ...     type="tool",
+            ...     node="tool",
+            ...     tool_name="get_schedule",
+            ...     tool_result={"schedules": [...]}
+            ... )
 
-        >>> # 토큰 스트리밍 이벤트
-        >>> event = StreamEvent(type="token", content="안녕")
+            >>> # 토큰 스트리밍 이벤트
+            >>> event = StreamEvent(type="token", content="안녕")
 
-        >>> # 최종 응답 이벤트
-        >>> event = StreamEvent(
-        ...     type="response",
-        ...     content="금요일에 뮤직뱅크 나와!",
-        ...     tool_used="get_schedule"
-        ... )
+            >>> # 최종 응답 이벤트
+            >>> event = StreamEvent(
+            ...     type="response",
+            ...     content="금요일에 뮤직뱅크 나와!",
+            ...     tool_used="get_schedule"
+            ... )
     """
 
     type: StreamEventType = Field(
@@ -152,34 +153,34 @@ SSE 스트리밍 이벤트 스키마
         description="이벤트 타입",
     )
 
-    node: Optional[str] = Field(
+    node: str | None = Field(
         default=None,
         description="현재 실행 중인 노드 이름",
         examples=["router", "rag", "tool", "response"],
     )
 
-    content: Optional[str] = Field(
+    content: str | None = Field(
         default=None,
         description="텍스트 내용 (토큰 또는 최종 응답)",
     )
 
-    tool_name: Optional[str] = Field(
+    tool_name: str | None = Field(
         default=None,
         description="실행된 Tool 이름",
         examples=["get_schedule", "recommend_song"],
     )
 
-    tool_result: Optional[Any] = Field(
+    tool_result: Any | None = Field(
         default=None,
         description="Tool 실행 결과",
     )
 
-    tool_used: Optional[str] = Field(
+    tool_used: str | None = Field(
         default=None,
         description="최종 응답에서 사용된 Tool",
     )
 
-    error: Optional[str] = Field(
+    error: str | None = Field(
         default=None,
         description="에러 메시지",
     )

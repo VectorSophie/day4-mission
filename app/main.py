@@ -16,6 +16,7 @@ API 문서:
     - ReDoc: http://localhost:8000/redoc
 """
 
+import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -25,12 +26,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
-import sys
 
-from app.core.config import settings
 from app.api.routes import api_router
-from app.ui import create_demo, CUSTOM_CSS, THEME
-
+from app.core.config import settings
+from app.ui import create_demo
 
 # ===== 로깅 설정 =====
 # loguru를 사용하여 구조화된 로깅 설정
@@ -76,7 +75,8 @@ async def lifespan(app: FastAPI):
     # LangGraph 그래프 초기화 (워밍업)
     try:
         from app.graph import get_lumi_graph
-        graph = get_lumi_graph()
+
+        get_lumi_graph()
         logger.info("✅ LangGraph 그래프 컴파일 완료")
     except Exception as e:
         logger.error(f"LangGraph 초기화 실패: {e}")
@@ -95,10 +95,14 @@ def _validate_settings():
     설정되지 않은 경우 경고 로그를 출력합니다.
     """
     if not settings.upstage_api_key:
-        logger.warning("⚠️ UPSTAGE_API_KEY가 설정되지 않았습니다. LLM 기능을 사용할 수 없습니다.")
+        logger.warning(
+            "⚠️ UPSTAGE_API_KEY가 설정되지 않았습니다. LLM 기능을 사용할 수 없습니다."
+        )
 
     if not settings.supabase_url or not settings.supabase_key:
-        logger.warning("⚠️ Supabase 설정이 완료되지 않았습니다. Mock 데이터를 사용합니다.")
+        logger.warning(
+            "⚠️ Supabase 설정이 완료되지 않았습니다. Mock 데이터를 사용합니다."
+        )
 
     # Production 환경에서는 디버그 모드 비활성화 필요
     if settings.environment == "production" and settings.debug:
@@ -125,12 +129,12 @@ app = FastAPI(
     - FastAPI: 웹 프레임워크
     - Supabase: 데이터베이스
 
-    
+
     - LangGraph 그래프 구현 (router, rag, tool, response 노드)
     - Tool Calling (스케줄 조회, 팬레터 저장, 노래 추천 등)
     - POST /chat API 엔드포인트
 
-    
+
     - SSE 스트리밍 채팅 (POST /chat/stream)
     - 노드별 실행 상황 실시간 전송
     - 에러 발생 시 스트림으로 에러 전송
@@ -206,7 +210,7 @@ async def api_info() -> dict:
         "endpoints": {
             "health": "/api/v1/health",
             "chat": "/api/v1/chat",
-            "chat_stream": "/api/v1/chat/stream",  
+            "chat_stream": "/api/v1/chat/stream",
         },
     }
 
